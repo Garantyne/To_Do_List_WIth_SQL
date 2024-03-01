@@ -68,6 +68,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Connection\ConnectionWithDB.cs" />
+    <Compile Include="Exceptions\DateException.cs" />
+    <Compile Include="Exceptions\TitleNullOrEmtyException.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

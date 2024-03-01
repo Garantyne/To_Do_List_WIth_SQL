@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using To_Do_List_WIth_SQL.Connection;
+using To_Do_List_WIth_SQL.Exceptions;
 using To_Do_List_WIth_SQL.Model;
 
 namespace To_Do_List_WIth_SQL
@@ -85,22 +86,31 @@ namespace To_Do_List_WIth_SQL
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ToDo toDo = new ToDo()
-            {
-                Deadline = Convert.ToDateTime(dateTextBox.Text),
-                Description = discriptionTextBox.Text,
-                Name = nameTextBox.Text
-            };
+            ToDo toDo;
             try
             {
+                 toDo = new ToDo()
+                {
+                    Deadline = Convert.ToDateTime(DateExceptionProcessing(dateTextBox.Text)),
+                    Description = discriptionTextBox.Text,
+                    Name = nameTextBox.Text
+                };
                 toDoRepository.AddToDo(toDo);
                 ToDoListBox.Items.Add(toDo);
-                
             }
-            catch(Exception ex)
+            catch ( DateException ex)
+            {
+                MessageBox.Show($"{ex.Message}", ex.DateValue, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (TitleNullOrEmtyException ex)
+            {
+                MessageBox.Show($"{ex.Message}", "Пустое значение", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            catch (Exception ex)
             {
                 MessageBox.Show($"{ex.Message}", "ERROR");
             }
+            
             ToDoListBox.Items.Clear ();
             OpenAllList();
 
@@ -108,29 +118,57 @@ namespace To_Do_List_WIth_SQL
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            int id = 0;
-            if (ToDoListBox.SelectedItem != null)
-            {
-                ToDo todo = (ToDoListBox.SelectedItem as ToDo);
-                id = todo.Id;
+            try {
+                int id = 0;
+                if (ToDoListBox.SelectedItem != null)
+                {
+                    ToDo todo = (ToDoListBox.SelectedItem as ToDo);
+                    id = todo.Id;
+                }
+                ToDo toDo = new ToDo()
+                {
+                    Id = id,
+                    Deadline = Convert.ToDateTime(dateTextBox.Text),
+                    Description = discriptionTextBox.Text,
+                    Name = nameTextBox.Text
+                };
+                try
+                {
+                    toDoRepository.UpdateToDo(toDo, id);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"{ex.Message}", "ERROR");
+                }
             }
-            ToDo toDo = new ToDo()
+            catch(DateException ex)
             {
-                Id = id,
-                Deadline = Convert.ToDateTime(dateTextBox.Text),
-                Description = discriptionTextBox.Text,
-                Name = nameTextBox.Text
-            };
-            try
-            {
-                toDoRepository.UpdateToDo(toDo, id);
+                MessageBox.Show($"{ex.Message}", ex.DateValue, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            catch (Exception ex)
+            catch(TitleNullOrEmtyException ex)
             {
-                MessageBox.Show($"{ex.Message}", "ERROR");
+                MessageBox.Show($"{ex.Message}", "Пустое значение", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            
             ToDoListBox.Items.Clear();
             OpenAllList();
         }
+
+        private string DateExceptionProcessing(string message)
+        {
+            try
+            {
+                if(message == null || message.Length < 10 || message.Length > 10)
+                {
+                    throw new DateException("Некорректный ввод даты, введите дату правильно", message);
+                }
+            }catch(Exception ex)
+            {
+                MessageBox.Show($"{ex.Message}", "Неизвестная ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            return message;
+        }
+
+        
     }
 }
